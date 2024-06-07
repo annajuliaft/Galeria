@@ -2,6 +2,7 @@ package tamanini.ferreira.galeria.activity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,9 +14,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import java.io.File;
 
 import tamanini.ferreira.galeria.R;
 import tamanini.ferreira.galeria.util.Util;
@@ -46,8 +50,9 @@ public class PhotoActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDefaultDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -56,19 +61,22 @@ public class PhotoActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected() {
-        return onOptionsItemSelected(null);
-    }
+
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.opShare:
-                sharePhoto();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.opShare) {
+            sharePhoto();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
+
+    void sharePhoto() {
+        // Codigo para cpmpartiilhar a foto
+        Uri photoUri = FileProvider.getUriForFile(PhotoActivity.this, "trindade.daniel.galeria.fileprovider", new File(photoPath));
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.putExtra(Intent.EXTRA_STREAM, photoUri);
+        i.setType("image/jpeg");
+        startActivity(i);}
 }

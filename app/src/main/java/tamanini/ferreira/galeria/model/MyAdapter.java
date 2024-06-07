@@ -15,12 +15,12 @@ import tamanini.ferreira.galeria.R;
 import tamanini.ferreira.galeria.activity.MainActivity;
 import tamanini.ferreira.galeria.util.Util;
 
-public class MyAdapter {public class MainAdapter extends RecyclerView.Adapter {
+public class MyAdapter extends RecyclerView.Adapter {
 
     MainActivity mainActivity;
     List<String> photos;
 
-    public MainAdapter(MainActivity mainActivity, List<String> photos) {
+    public MyAdapter(MainActivity mainActivity, List<String> photos) {
         this.mainActivity = mainActivity;
         this.photos = photos;
     }
@@ -35,7 +35,7 @@ public class MyAdapter {public class MainAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return itens.size();
+        return photos.size();
     }
 
     @Override

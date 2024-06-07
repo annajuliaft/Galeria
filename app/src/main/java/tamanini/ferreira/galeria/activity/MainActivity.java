@@ -1,9 +1,17 @@
 package tamanini.ferreira.galeria.activity;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -11,11 +19,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,7 +35,10 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import tamanini.ferreira.galeria.R;
@@ -36,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     MyAdapter myAdapter;
 
+    static int RESULT_REQUEST_PERMISSION = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +81,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.tbMain);
         setSupportActionBar(toolbar);
 
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.CAMERA);
+        checkForPermissions(permissions);
+
     }
     static int RESULT_TAKE_PICTURE = 1;
     String currentPhotoPath;
@@ -76,6 +96,35 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, "Não foi possível criar o arquivo", Toast.LENGTH_LONG).show();
             return;
         }
+        currentPhotoPath = f.getAbsolutePath();
+
+        if (f != null) {
+            Uri fUri = FileProvider.getUriForFile(MainActivity.this, "tamanini.ferreira.galeria.fileprovider", f);
+            Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            i.putExtra(MediaStore.EXTRA_OUTPUT, fUri);
+            startActivityForResult(i, RESULT_TAKE_PICTURE);
+        }
+        }
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp;
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File f = File.createTempFile(imageFileName, ".jpg", storageDir);
+        return f;
+        }
+        @Override
+        protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RESULT_TAKE_PICTURE) {
+            if(resultCode == Activity.RESULT_OK) {
+                photos.add(currentPhotoPath);
+                myAdapter.notifyItemInserted(photos.size()-1);}
+            else {
+                File f = new File(currentPhotoPath);
+                f.delete();
+            }
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -87,13 +136,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.opCamera:
-                dispatchTakePictureIntent();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.opCamera) {
+            dispatchTakePictureIntent();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     public void startPhotoActivity(String photoPath) {
@@ -101,12 +148,56 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra("photo_path", photoPath);
         startActivity(i);
     }
-    
-    
+    private void checkForPermissions(List<String> permissions) {
+        List<String> permissionsNotGranted = new ArrayList<>();
 
-
-
-}
-
-    private File createImageFile() {
+        for(String permission : permissions) {
+            if( !hasPermission(permission)) {
+                permissionsNotGranted.add(permission);
+            }
+        }
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if(permissionsNotGranted.size() > 0) {
+                requestPermissions(permissionsNotGranted.toArray(new String[permissionsNotGranted.size()]),RESULT_REQUEST_PERMISSION);
+            }
+        }
     }
+    private boolean hasPermission(String permission) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return ActivityCompat.checkSelfPermission(MainActivity.this, permission) == PackageManager.PERMISSION_GRANTED;
+            }
+        return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        final List<String> permissionsRejected = new ArrayList<>();
+        if(requestCode == RESULT_REQUEST_PERMISSION) {
+            for(String permission : permissions) {
+                if(!hasPermission(permission)) {
+                    permissionsRejected.add(permission);
+                }
+            }
+        }
+
+        if(permissionsRejected.size() > 0) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if(shouldShowRequestPermissionRationale(permissionsRejected.get(0))) {
+                    new AlertDialog.Builder(MainActivity.this).setMessage("Para usar essa app é preciso conceder essas permissões").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            requestPermissions(permissionsRejected.toArray(new String[permissionsRejected.size()]), RESULT_REQUEST_PERMISSION);
+                        }
+                    }).create().show();
+                }
+            }
+        }
+    }
+}
+    
+
+
+
+
