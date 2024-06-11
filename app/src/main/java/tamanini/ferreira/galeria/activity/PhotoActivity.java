@@ -39,17 +39,22 @@ public class PhotoActivity extends AppCompatActivity {
             return insets;
         });
 
+        //obtenha o caminho da foto que foi envia via o Intent de criação
         Intent i = getIntent();
         photoPath = i.getStringExtra("photo_path");
 
+        //carregue a foto em um Bitmap
         Bitmap bitmap = Util.getBitmap(photoPath);
+        //sete o Bitmap no ImageView
         ImageView imPhoto = findViewById(R.id.imPhoto);
         imPhoto.setImageBitmap(bitmap);
 
         Toolbar toolbar = findViewById(R.id.tbPhoto);
         setSupportActionBar(toolbar);
 
+        //obtém da Activity a ActionBar padrão o (a qual foi setada pelas linhas 6 e 7)
         ActionBar actionBar = getSupportActionBar();
+        //habilita o botão de voltar na ActionBar
         actionBar.setDisplayHomeAsUpEnabled(true);
     }
 
@@ -66,6 +71,8 @@ public class PhotoActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.opShare) {
+            //Caso o ícone de câmera tenha sido clicado, então será executado código que
+            // compartilha a foto
             sharePhoto();
             return true;
         }
@@ -74,7 +81,7 @@ public class PhotoActivity extends AppCompatActivity {
 
     void sharePhoto() {
         // Codigo para cpmpartiilhar a foto
-        Uri photoUri = FileProvider.getUriForFile(PhotoActivity.this, "trindade.daniel.galeria.fileprovider", new File(photoPath));
+        Uri photoUri = FileProvider.getUriForFile(PhotoActivity.this, "tamanini.ferreira.galeria.fileprovider", new File(photoPath));
         Intent i = new Intent(Intent.ACTION_SEND);
         i.putExtra(Intent.EXTRA_STREAM, photoUri);
         i.setType("image/jpeg");

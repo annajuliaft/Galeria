@@ -39,14 +39,20 @@ public class MyAdapter extends RecyclerView.Adapter {
     }
 
     @Override
+    //A função preenche o ImageView com a foto correspondente.
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, final int position) {
         ImageView imPhoto = holder.itemView.findViewById(R.id.imItem);
+        //obtidos as dimensões que a
+        //imagem vai ter na lista
         int w = (int)
                 mainActivity.getResources().getDimension(R.dimen.itemWidth);
         int h = (int)
                 mainActivity.getResources().getDimension(R.dimen.itemHeight);
+        //carrega a imagem em um Bitmap
         Bitmap bitmap = Util.getBitmap(photos.get(position), w, h);
+        //o Bitmap é setado no ImageView
         imPhoto.setImageBitmap(bitmap);
+        //é definido o que acontece quando o usuário clica em cima de uma imagem
         imPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
